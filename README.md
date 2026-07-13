@@ -1,5 +1,5 @@
 # Roboracer Data Visualizer
-Real-time data visualization tool for F1TENTH autonomous vehicles, built with pyqtgraph and ROS2.
+Real-time data visualization tool for Roboracer autonomous vehicles, built with pyqtgraph and ROS2.
 
 ## Description
 This node provides a graphical interface to monitor vehicle state during experiments. It displays real-time plots of position, speed, acceleration, ERPM, and trajectory tracking. Features Start/Pause/Reset buttons, automatic ROS bag recording, and experiment export to CSV, MATLAB, and images.
