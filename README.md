@@ -5,20 +5,20 @@ Real-time data visualization tool for Roboracer autonomous vehicles, built with 
 This node provides a graphical interface to monitor vehicle state during experiments. It displays real-time plots of position, speed, acceleration, ERPM, and trajectory tracking. Features Start/Pause/Reset buttons, automatic ROS bag recording, and experiment export to CSV, MATLAB, and images.
 
 ## Features
--Real-time plotting with 5 tabbed views
--Trajectory tracking (expected vs actual)
--Error computation (speed, position X/Y)
--Start/Pause/Reset control buttons
--Automatic ROS bag recording
--Data export: CSV, .mat, PNG, SVG
--Keyboard shortcut: Ctrl+S to save
+- Real-time plotting with 5 tabbed views
+- Trajectory tracking (expected vs actual)
+- Error computation (speed, position X/Y)
+- Start/Pause/Reset control buttons
+- Automatic ROS bag recording
+- Data export: CSV, .mat, PNG, SVG
+- Keyboard shortcut: Ctrl+S to save
 ## Requirements
--ROS2 Humble
--Python 3.8+
--PyQt5
--pyqtgraph
--scipy
--numpy
+- ROS2 Humble
+- Python 3.8+
+- PyQt5
+- pyqtgraph
+- scipy
+- numpy
 ## Installation
 ```
 sudo apt install python3-pyqt5 python3-pyqtgraph
