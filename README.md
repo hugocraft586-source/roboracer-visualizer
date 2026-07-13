@@ -23,10 +23,9 @@ This node provides a graphical interface to monitor vehicle state during experim
 ```
 sudo apt install python3-pyqt5 python3-pyqtgraph
 pip install scipy numpy
-
-cd ~/ros2_ws/src
+	
 git clone https://github.com/hugocraft586-source/roboracer-visualizer.git
-cd ~/ros2_ws
+cd roboracer-visualizer
 colcon build --packages-select plotter vesc_msgs
 source install/setup.bash
 ```
