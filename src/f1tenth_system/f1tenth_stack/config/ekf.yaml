@@ -1,0 +1,18 @@
+extended_kalman_filter:
+  ros__parameters:
+    # Define the initial state of the EKF
+    initial_state: [0.0, 0.0, 0.0, 0.0] # Variables: x, y, theta, w
+    # Define the initial covariance matrix
+    initial_covariance: [0.01, 0.0,  0.0,  0.0,
+                         0.0,  0.01, 0.0,  0.0,
+                         0.0,  0.0,  0.01, 0.0,
+                         0.0,  0.0,  0.0,  0.01]
+    # Define the process noise covariance matrix
+    process_noise_covariance: [3.33e-5, 0.0,     0.0,      0.0,  # px
+                               0.0,     3.33e-5, 0.0,      0.0,  # py
+                               0.0,     0.0,     1e-5, 0.0, # theta
+                               0.0,     0.0,     0.0,      5e-4] # w
+
+    # Define the measurement noise covariance matrix
+    measurement_noise_covariance: [1.9e-5, 0.0,         # theta
+                                   0.0,    0.00147]        # w

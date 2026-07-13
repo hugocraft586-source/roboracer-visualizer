@@ -1,0 +1,26 @@
+urg_node:
+  ros__parameters:
+    ### Without camera (270º)
+    #angle_max: 2.35619
+    #angle_min: -2.35619
+    ### With camera (180º)
+    #angle_max: 1.570796
+    #angle_min: -1.570796
+    ### Normal (360º)
+    angle_max: 3.1415
+    angle_min: -3.1415
+    ip_address: "192.168.0.10"
+    ip_port: 10940
+    #serial_port: "/dev/sensors/hokuyo"
+    serial_baud: 115200
+    laser_frame_id: "laser"
+    calibrate_time: false
+    default_user_latency: 0.0
+    diagnostics_tolerance: 0.05
+    diagnostics_window_time: 5.0
+    error_limit: 4
+    get_detailed_status: false
+    publish_intensity: false
+    publish_multiecho: false
+    cluster: 1
+    skip: 0
