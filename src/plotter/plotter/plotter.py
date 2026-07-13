@@ -23,7 +23,13 @@ import subprocess
 import signal
 
 class PlotterNode(Node):
+    """
+    Class responsible for representing and saving Roboracer proyect data
+    """
     def __init__(self):
+        """
+        Initiation of variables, buffers and ROS2 elements
+        """
         super().__init__('PlotterNode')
 
         self.lock = threading.Lock()
@@ -32,7 +38,7 @@ class PlotterNode(Node):
         self.plotting_active = False
         self.plotting_paused = False
 
-        # Smaller buffers for performance
+        # Define small buffers for performance
         self.add_buffer('x_odom', maxlen=2000)
         self.add_buffer('y_odom', maxlen=2000)
         self.add_buffer('yaw_odom', maxlen=3000)
@@ -59,15 +65,17 @@ class PlotterNode(Node):
         # ROS bag process
         self.rosbag_process = None
 
-        # Create main widget with button
+        # Create main widget
         self.main_widget = QWidget()
         self.main_widget.setWindowTitle('F1TENTH Plotter')
         self.main_widget.resize(1400, 900)
         self.main_layout = QVBoxLayout()
         self.main_widget.setLayout(self.main_layout)
 
+        # Create control layout
         self.control_layout = QHBoxLayout()
-
+        
+        # Add togle button
         self.toggle_button = QPushButton("Start")
         self.toggle_button.setMaximumHeight(50)
         self.toggle_button.setStyleSheet("""
@@ -86,6 +94,7 @@ class PlotterNode(Node):
         self.toggle_button.clicked.connect(self.toggle_plotting)
         self.main_layout.addWidget(self.toggle_button)
 
+        # Add file saver
         self.filename_label = QLabel("Base name:")
         self.filename_label.setStyleSheet("font-size: 14px; font-weight: bold;")
         self.control_layout.addWidget(self.filename_label)
@@ -128,16 +137,13 @@ class PlotterNode(Node):
         self.save_button.clicked.connect(self.save_all_data)
         self.control_layout.addWidget(self.save_button)
 
+        # Define saving shortcut
         self.save_shortcut = QShortcut(QKeySequence("Ctrl+S"), self.main_widget)
         self.save_shortcut.activated.connect(self.save_all_data)
         
         self.main_layout.addLayout(self.control_layout)
 
-        # Window
-        #self.window = pg.GraphicsLayoutWidget()
-        #self.main_layout.addWidget(self.window, stretch=1)
-
-        # Create main window layout using tabs
+        # Create tab widgets
         self.tab_widget = QTabWidget()
         self.tab_widget.setStyleSheet("""
             QTabWidget::pane {
@@ -166,7 +172,7 @@ class PlotterNode(Node):
         """)
         self.main_layout.addWidget(self.tab_widget, stretch=1)
 
-        # Create a tab of each of the rows. Also add an extra tab for the trayectory plot
+        # Create a tab for each group of plots
         tab1 = QWidget()
         tab1_layout = QVBoxLayout()
         tab1.setLayout(tab1_layout)
@@ -361,7 +367,12 @@ class PlotterNode(Node):
         self.main_widget.show()
 
     def get_base_filename(self):
+        """
+        Saves input filename
 
+        Returns:
+            name (str): name of input file
+        """
         name = self.filename_input.text().strip()
         if not name:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -369,14 +380,20 @@ class PlotterNode(Node):
 
         return name
     
-    def save_plots(self, save_dir):
+    def save_plots(self, save_dir: str):
+        """
+        Saves the plots into .png and .svg files
 
+        Parameters:
+            save_dir (str): File save directory
+        """
         plots_dir = os.path.join(save_dir, 'plots')
         png_dir = os.path.join(plots_dir, 'png')
         svg_dir = os.path.join(plots_dir, 'svg')
         os.makedirs(png_dir, exist_ok=True)
         os.makedirs(svg_dir, exist_ok=True)
 
+        # Get plots
         tab1_plots = self.tab_widget.widget(0).findChild(pg.GraphicsLayoutWidget)
         tab2_plots = self.tab_widget.widget(1).findChild(pg.GraphicsLayoutWidget)
         tab3_plots = self.tab_widget.widget(2).findChild(pg.GraphicsLayoutWidget)
@@ -411,7 +428,9 @@ class PlotterNode(Node):
                     self.get_logger().error(f'Failed to save plot {name}: {e}')
     
     def start_rosbag_recording(self):
-
+        """
+        Records a .rosbag with the selected topics
+        """
         try:
             base_name = self.get_base_filename()
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -440,7 +459,9 @@ class PlotterNode(Node):
             self.get_logger().error(f'Failed to start ROS bag: {e}')
     
     def stop_rosbag_recording(self):
-
+        """
+        Stops .rosbag recording
+        """
         if self.rosbag_process:
             self.rosbag_process.send_signal(signal.SIGINT)
             try:
@@ -450,35 +471,13 @@ class PlotterNode(Node):
             self.rosbag_process = None
             self.get_logger().info('Stopped ROS bag recording')
 
-    def save_all_data(self):
-        with self.lock:
-            base_name = self.get_base_filename()
-            
-            # Create directory for this experiment
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            save_dir = f"{base_name}_{timestamp}"
-            os.makedirs(save_dir, exist_ok=True)
-            
-            # Save CSV files
-            self.save_csv_data(save_dir)
-            
-            # Save .mat file
-            self.save_mat_data(save_dir, base_name)
+    def save_csv_data(self, save_dir: str):
+        """
+        Saves the different plot buffer into .csv files
 
-            # Save png files and svg files
-            self.save_plots(save_dir)
-            
-            # Note ROS bag recording
-            if self.rosbag_process:
-                self.get_logger().info(f'ROS bag recording in progress: {base_name}.bag')
-            
-            # Save metadata
-            self.save_metadata(save_dir, base_name)
-            
-            self.get_logger().info(f'All data saved to {save_dir}/')
-
-    def save_csv_data(self, save_dir):
-
+        Parameters: 
+            save_dir (str): Save file directory
+        """
         csv_dir = os.path.join(save_dir, 'csv')
         os.makedirs(csv_dir, exist_ok=True)
 
@@ -529,8 +528,14 @@ class PlotterNode(Node):
                 comments=''
             )
 
-    def save_mat_data(self, save_dir, base_name):
+    def save_mat_data(self, save_dir: str, base_name: str):
+        """
+        Saves the plot buffers into a .mat file
 
+        Parameters:
+            save_dir (str): Save file directory
+            base_name (str): File name
+        """
         mat_data = {}
 
         for name, buf in self.data.items():
@@ -566,7 +571,14 @@ class PlotterNode(Node):
         self.get_logger().info(f'Saved {base_name}.mat')
 
 
-    def save_metadata(self, save_dir, base_name):
+    def save_metadata(self, save_dir: str, base_name: str):
+        """
+        Save metadata information
+
+        Parameters:
+            save_dir (str): Save file directory
+            base_name (str): File name
+        """
         with open(os.path.join(save_dir, 'metadata.txt'), 'w') as f:
             f.write(f"Experiment: {base_name}\n")
             f.write(f"Save time: {datetime.now()}\n")
@@ -589,19 +601,67 @@ class PlotterNode(Node):
             f.write("  /sensors/core\n")
             f.write("  /sensors/imu/raw\n")
             f.write("  /commands/motor/speed\n")
+
+    def save_all_data(self):
+        """
+        Save all the data types
+        """
+        with self.lock:
+            base_name = self.get_base_filename()
+            
+            # Create directory for this experiment
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            save_dir = f"{base_name}_{timestamp}"
+            os.makedirs(save_dir, exist_ok=True)
+            
+            # Save CSV files
+            self.save_csv_data(save_dir)
+            
+            # Save .mat file
+            self.save_mat_data(save_dir, base_name)
+
+            # Save png files and svg files
+            self.save_plots(save_dir)
+            
+            # Note ROS bag recording
+            if self.rosbag_process:
+                self.get_logger().info(f'ROS bag recording in progress: {base_name}.bag')
+            
+            # Save metadata
+            self.save_metadata(save_dir, base_name)
+            
+            self.get_logger().info(f'All data saved to {save_dir}/')
+
+    
         
-    def add_buffer(self, name, maxlen=5000):
+    def add_buffer(self, name:str, maxlen:int=5000):
+        """
+        Add buffer to data dictionary
+
+        Parameters:
+            name (str): Buffer name
+            maxlen (int): Allowed number of data values
+        """
         self.data[name] = {
             'ts': deque(maxlen=maxlen),
             'val': deque(maxlen=maxlen)
         }
 
     def _get_time(self, msg=None):
+        """
+        Get actual time
+        """
         if msg is not None and hasattr(msg, 'header'):
             return msg.header.stamp.sec + msg.header.stamp.nanosec * 1e-9
         return self.get_clock().now().nanoseconds * 1e-9
 
-    def trajectory_callback(self,msg):
+    def trajectory_callback(self,msg: Float64MultiArray):
+        """
+        Saves expected trayectory data onto buffer
+
+        Parameters: 
+            msg (Float64MultiArray): Expected trayectory data points
+        """
         with self.lock:
 
             data = msg.data
@@ -616,7 +676,13 @@ class PlotterNode(Node):
                 self.exp_y.append(y)
             
 
-    def expected_x_callback(self,msg):
+    def expected_x_callback(self,msg:Float64):
+        """
+        Saves last position of each movement on x axis
+
+        Parameters:
+            msg (Float64): Theoretical position x
+        """
         with self.lock:
             t = self.get_clock().now().nanoseconds * 1e-9
 
@@ -625,7 +691,13 @@ class PlotterNode(Node):
             self.data['exp_x']['ts'].append(t)
             self.data['exp_x']['val'].append(input_exp_x)
 
-    def expected_y_callback(self,msg):
+    def expected_y_callback(self,msg:Float64):
+        """
+        Saves last position of each movement on y axis
+
+        Parameters:
+            msg (Float64): Theoretical position x
+        """
         with self.lock:
             t = self.get_clock().now().nanoseconds * 1e-9
 
@@ -634,7 +706,13 @@ class PlotterNode(Node):
             self.data['exp_y']['ts'].append(t)
             self.data['exp_y']['val'].append(input_exp_y)
 
-    def odom_callback(self, msg):
+    def odom_callback(self, msg:Odometry):
+        """
+        Save odometry data on buffers
+
+        Parameters:
+            msg (Odometry): Fused odometry information
+        """
         with self.lock:
             t = self._get_time(msg)
             if self.start_time is None:
@@ -655,7 +733,13 @@ class PlotterNode(Node):
                 self.data[name]['ts'].append(t)
                 self.data[name]['val'].append(val)
 
-    def cmd_speed_callback(self, msg):
+    def cmd_speed_callback(self, msg:Float64):
+        """
+        Save input erpm and velocity data
+
+        Parameters:
+            msg (Float64): Speed data
+        """
         with self.lock:
             t = self._get_time()
             input_erpm = msg.data
@@ -665,7 +749,13 @@ class PlotterNode(Node):
             self.data['input_vel']['ts'].append(t)
             self.data['input_vel']['val'].append(input_vel)
 
-    def imu_callback(self, msg):
+    def imu_callback(self, msg:Imu):
+        """
+        Saves IMU information
+
+        Parameters:
+            msg (Imu): VESC IMU values
+        """
         with self.lock:
             t = self._get_time(msg)
             self.data['x_accel']['ts'].append(t)
@@ -673,13 +763,22 @@ class PlotterNode(Node):
             self.data['y_accel']['ts'].append(t)
             self.data['y_accel']['val'].append(msg.linear_acceleration.y)
 
-    def sensor_callback(self, msg):
+    def sensor_callback(self, msg:VescStateStamped):
+        """
+        Saves actual vehicle speed information
+        
+        Parameters:
+            msg (VescStateStamped): VESC sensor information
+        """
         with self.lock:
             t = self._get_time(msg)
             self.data['erpm']['ts'].append(t)
             self.data['erpm']['val'].append(msg.state.speed)
 
     def toggle_plotting(self):
+        """
+        Allows for start, pause and reset of plot drawing
+        """
         with self.lock:
             if not self.plotting_active and not self.plotting_paused:
                 # START
@@ -771,6 +870,9 @@ class PlotterNode(Node):
                 self.get_logger().info('Plotting RESET')
 
     def update_plots(self):
+        """
+        Updates plot information every timer callback
+        """
         if not self.plotting_active:
             return
         try:
